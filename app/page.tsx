@@ -447,11 +447,13 @@ function Dashboard() {
           <SectorChart drivers={activeData}/>
         </Section>
 
-        {/* TYRE STRATEGY */}
-        <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
-          desc="Overview of tyre strategy per driver — compounds used, stint length, and pit stop timing.">
-          <TyreStrategyChart drivers={activeData}/>
-        </Section>
+        {/* TYRE STRATEGY — Expert mode only like TI */}
+        {mode === 'expert' && (
+          <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
+            desc="Overview of tyre strategy per driver — compounds used, stint length, and pit stop timing.">
+            <TyreStrategyChart drivers={activeData}/>
+          </Section>
+        )}
 
         {/* POSITION CHANGES */}
         <Section id="position-changes-section" title="POSITION CHANGES"
@@ -459,13 +461,18 @@ function Dashboard() {
           <PositionChart drivers={activeData}/>
         </Section>
 
-        {/* DATA TABLE — TI has a tabular lap times view */}
-        <Section id="data-table-container" title="LAP TIMES DATA TABLE"
-          desc="Tabular view of lap times, sector splits, tyre compounds and speed trap data." defaultOpen={false}>
-          <LapDataTable drivers={activeData}/>
-        </Section>
+        {/* DATA TABLE — in Expert mode */}
+        {mode === 'expert' && (
+          <Section id="data-table-container" title="LAP TIMES DATA TABLE"
+            desc="Tabular view of lap times, sector splits, tyre compounds and speed trap data." defaultOpen={false}>
+            <LapDataTable drivers={activeData}/>
+          </Section>
+        )}
 
         {/* TELEMETRY — TI puts this near bottom, after data table */}
+        
+
+        {/* SPEED TRACE & TELEMETRY - always visible, placeholder until lap clicked */}
         <Section id="tel-chart-container" title="SPEED TRACE & TELEMETRY"
           desc={activeData.some(d=>d.tel.length>0) ? 'Fastest lap telemetry loaded. Click any lap dot above to compare specific laps.' : 'Click any lap dot on the chart above to load telemetry.'}>
           <TelemetryChart drivers={activeData}/>

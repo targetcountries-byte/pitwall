@@ -2,11 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* TracingInsights exact body gradient - the most distinctive visual */
+body {
+  background: linear-gradient(135deg, rgb(0, 36, 81) 0%, rgb(0, 0, 0) 100%) fixed !important;
+  min-height: 100vh;
+}
+
+/* Theme-specific gradients */
+[data-theme="ferrari"] body { background: linear-gradient(135deg, rgb(80, 0, 0) 0%, rgb(0, 0, 0) 100%) fixed !important; }
+[data-theme="mclaren"] body { background: linear-gradient(135deg, rgb(80, 40, 0) 0%, rgb(0, 0, 0) 100%) fixed !important; }
+[data-theme="mercedes"] body { background: linear-gradient(135deg, rgb(0, 40, 36) 0%, rgb(0, 0, 0) 100%) fixed !important; }
+[data-theme="redbull"] body { background: linear-gradient(135deg, rgb(0, 20, 80) 0%, rgb(0, 0, 0) 100%) fixed !important; }
+
 html { scroll-behavior: smooth; }
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(var(--p)/0.4); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--p)/0.7); }
+::-webkit-scrollbar-thumb { background: hsl(var(--p)/0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--p)/0.6); }
 
 .chart-tooltip {
   position: absolute;
@@ -15,19 +28,16 @@ html { scroll-behavior: smooth; }
   font-size: 11px;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid hsl(var(--b3));
-  background: hsl(var(--b2)/0.96);
+  border: 1px solid hsl(var(--b3)/0.5);
+  background: hsl(var(--b2)/0.97);
   color: hsl(var(--bc));
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
   white-space: nowrap;
+  max-width: 240px;
 }
 
-/* TomSelect-like styling for our native selects */
 .ti-select {
   @apply select select-bordered text-primary bg-base-200/60 w-full;
   min-height: 42px;
 }
-
-/* Lap chart circles pulse on hover */
-circle.lap-dot:hover { filter: brightness(1.3); }

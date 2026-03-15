@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-theme="tracinginsights" suppressHydrationWarning>
       <head><ThemeScript/></head>
-      <body className="min-h-screen bg-base-100 antialiased">
+      <body className="min-h-screen antialiased">
         <NavBar/>
         <main className="pb-20">{children}</main>
       </body>

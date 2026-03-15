@@ -62,11 +62,13 @@ export function WeatherChart({ weather }: { weather: WeatherData | null }) {
       }
     })
 
-    // X axis - time labels
+    // X axis - index labels (converted to minutes from session start)
+    const totalSecs = (weather.wT[weather.wT.length-1] - weather.wT[0]) || 1
     g.append('g').attr('transform',`translate(0,${iH})`).call(
-      d3.axisBottom(xScale).ticks(8).tickFormat(i => {
-        const t = weather.wT[+i]
-        if (t == null) return ''
+      d3.axisBottom(xScale).ticks(8).tickFormat((i) => {
+        const idx = Math.round(+i * (n-1))
+        const t = weather.wT[idx] - (weather.wT[0] || 0)
+        if (t == null || isNaN(t)) return `${Math.round(+i * 100)}%`
         const mins = Math.floor(t/60)
         return `${mins}m`
       })

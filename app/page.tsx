@@ -35,7 +35,15 @@ function Section({ id, title, desc, children, defaultOpen=true, badge }: { id:st
             <h2 className="text-sm sm:text-base font-bold text-primary uppercase tracking-wider">{title}</h2>
             {badge && <span className="badge badge-primary badge-xs">{badge}</span>}
           </div>
-          {open ? <ChevronUp size={14} className="text-primary/40 shrink-0"/> : <ChevronDown size={14} className="text-primary/40 shrink-0"/>}
+          <div className="flex items-center gap-2 shrink-0">
+            {open && (
+              <button className="btn btn-primary btn-xs text-[10px] hidden sm:inline-flex opacity-75 hover:opacity-100 font-bold"
+                onClick={(e)=>{e.stopPropagation(); alert('Right-click any chart → Save image, or use your browser screenshot tool')}}>
+                Screenshot
+              </button>
+            )}
+            {open ? <ChevronUp size={14} className="text-primary/40"/> : <ChevronDown size={14} className="text-primary/40"/>}
+          </div>
         </button>
         {open && (
           <div className="px-2 sm:px-3 lg:px-5 pb-4 pt-1">
@@ -439,13 +447,11 @@ function Dashboard() {
           <SectorChart drivers={activeData}/>
         </Section>
 
-        {/* TYRE STRATEGY */}
-        {mode === 'expert' && (
-          <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
-            desc="Tyre strategy overview — compounds used, stint length, and pit stop timing per driver.">
-            <TyreStrategyChart drivers={activeData}/>
-          </Section>
-        )}
+        {/* TYRE STRATEGY — always visible like TI */}
+        <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
+          desc="Tyre strategy overview — compounds used, stint length, and pit stop timing per driver.">
+          <TyreStrategyChart drivers={activeData}/>
+        </Section>
 
         {/* POSITION CHANGES */}
         <Section id="position-changes-section" title="POSITION CHANGES"

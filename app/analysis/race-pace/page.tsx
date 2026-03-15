@@ -159,7 +159,7 @@ function BoxPlotChart({ stats, year, event }: { stats: DriverStats[]; year: numb
     // Clamp to 95–102 but expand if data goes outside
     const yDomainMin = Math.min(95, dataMin - 0.5)
     const yDomainMax = Math.max(102, dataMax + 0.5)
-    const yS = d3.scaleLinear().domain([yDomainMax, yDomainMin]).range([iH, 0])
+    const yS = d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([iH, 0])
 
     // X: band scale
     const xS = d3.scaleBand()
@@ -356,7 +356,7 @@ function RaceTraceChart({ stats }: { stats: DriverStats[] }) {
     const yDomMax = Math.max(102, dataMaxT + 0.5)
 
     const xS = d3.scaleLinear().domain([minLap, maxLap]).range([0, iW])
-    const yS = d3.scaleLinear().domain([yDomMax, yDomMin]).range([iH, 0])
+    const yS = d3.scaleLinear().domain([yDomMin, yDomMax]).range([iH, 0])
 
     // Grid
     yS.ticks(6).forEach(v => {
@@ -436,7 +436,7 @@ function DistributionChart({ stats }: { stats: DriverStats[] }) {
     const dataMin2 = d3.min(allTimes) ?? 95
     const dataMax2 = d3.max(allTimes) ?? 102
     const yS = d3.scaleLinear()
-      .domain([Math.max(102, dataMax2 + 0.5), Math.min(95, dataMin2 - 0.5)])
+      .domain([Math.min(95, dataMin2 - 0.5), Math.max(102, dataMax2 + 0.5)])
       .range([iH, 0])
 
     g.append('g').call(d3.axisLeft(yS).ticks(4).tickFormat(d => `${(+d).toFixed(1)}s`))

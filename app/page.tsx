@@ -247,7 +247,7 @@ function Dashboard() {
                     <button key={d} onClick={()=>{store.toggleDriver(d);fetchedRef.current.delete(d)}}
                       className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-mono font-bold cursor-pointer hover:opacity-70 transition-opacity"
                       style={{borderColor:info?.color??'#888',color:info?.color??'#888',background:(info?.color??'#888')+'18'}}>
-                      {info?.url && <img src={info.url} alt={d} className="w-4 h-4 rounded-full object-cover object-top" onError={e=>{(e.target as HTMLImageElement).style.display='none'}}/>}
+                      {info?.url && <img src={`/api/driver-img?url=${encodeURIComponent(info.url)}`} alt={d} className="w-4 h-4 rounded-full object-cover object-top" onError={e=>{(e.target as HTMLImageElement).style.display='none'}}/>}
                       {d} <X size={9}/>
                     </button>
                   )
@@ -388,7 +388,7 @@ function Dashboard() {
                 {activeData.map(d => (
                   <span key={d.code} className="badge badge-sm font-mono gap-1"
                     style={{borderColor:d.color,color:d.color,background:d.color+'20'}}>
-                    {d.photoUrl && <img src={d.photoUrl} alt={d.code} className="w-4 h-4 rounded-full object-cover object-top" onError={e=>{(e.target as HTMLImageElement).style.display='none'}}/>}
+                    {d.photoUrl && <img src={`/api/driver-img?url=${encodeURIComponent(d.photoUrl)}`} alt={d.code} className="w-4 h-4 rounded-full object-cover object-top" onError={e=>{(e.target as HTMLImageElement).style.display='none'}}/>}
                     {d.code}
                   </span>
                 ))}
@@ -482,7 +482,7 @@ function Dashboard() {
         {/* SPEED TRACE & TELEMETRY — Images 4,5,6 — 12 channels */}
         <Section id="tel-chart-container" title="SPEED TRACE & TELEMETRY"
           desc={activeData.some(d=>d.tel.length>0) ? 'Fastest lap telemetry. Click any lap dot above to compare specific laps.' : 'Click any lap dot on the chart above to load telemetry.'}>
-          <TelemetryChart drivers={activeData}/>
+          <TelemetryChart drivers={activeData} year={year}/>
         </Section>
 
         {/* GG PLOT — Expert only */}

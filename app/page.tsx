@@ -1,5 +1,7 @@
 'use client'
 import { Suspense, useEffect, useRef, useState, useCallback } from 'react'
+
+declare global { interface Window { __preselectedLaps?: {driver:string;lap:number}[] } }
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { fetchDrivers, fetchLaptimes, fetchFastestLapTel, fetchTelemetry } from '@/lib/api'
@@ -58,16 +60,16 @@ function Section({ id, title, desc, children, defaultOpen=true }: { id:string; t
   const [open, setOpen] = useState(defaultOpen)
   return (
     <section id={id} className="mx-0.5 sm:mx-1 md:mx-2 lg:mx-4 mb-3">
-      <div className="bg-base-100/20 rounded-xl border border-white/5">
+      <div className="rounded-xl border border-white/[0.06]" style={{background:'rgba(255,255,255,0.03)',backdropFilter:'blur(8px)'}}>
         <button onClick={()=>setOpen(o=>!o)}
-          className="w-full flex items-center justify-between px-3 sm:px-5 py-3 hover:bg-white/5 transition-colors rounded-xl">
+          className="w-full flex items-center justify-between px-3 sm:px-5 py-3.5 hover:bg-white/5 transition-colors rounded-t-xl">
           <div className="text-left">
-            <h2 className="text-sm sm:text-base font-bold text-primary uppercase tracking-wide">{title}</h2>
-            <p className="text-xs text-base-content/35 mt-0.5">{desc}</p>
+            <h2 className="text-sm sm:text-base font-bold text-primary uppercase tracking-wider">{title}</h2>
+            {open && <p className="text-xs text-base-content/30 mt-0.5">{desc}</p>}
           </div>
-          {open ? <ChevronUp size={16} className="text-primary/50 shrink-0"/> : <ChevronDown size={16} className="text-primary/50 shrink-0"/>}
+          {open ? <ChevronUp size={15} className="text-primary/40 shrink-0"/> : <ChevronDown size={15} className="text-primary/40 shrink-0"/>}
         </button>
-        {open && <div className="px-2 sm:px-4 pb-4">{children}</div>}
+        {open && <div className="px-2 sm:px-3 lg:px-5 pb-4 pt-1">{children}</div>}
       </div>
     </section>
   )
@@ -92,25 +94,54 @@ function Dashboard() {
   const fetchedRef = useRef(new Set<string>())
   const sessKeyRef = useRef('')
 
-  // Parse URL params on mount (TracingInsights uses y=,e=,s=,d=,l=,mode=)
+  // Parse URL params on mount (TracingInsights format: y=,e=,s=,d=,l=,mode=)
   useEffect(() => {
     if (urlDone) return
     const y = sp.get('y'), e = sp.get('e'), s = sp.get('s')
-    const d = sp.get('d'), m = sp.get('mode')
-    if (y) setYear(+y)
+    const d = sp.get('d'), l = sp.get('l'), m = sp.get('mode')
+    
+    const yr = y ? +y : year
+    if (y) setYear(yr)
+    
     if (e) {
-      // TracingInsights shortens event names: "Chinese" -> match full name
-      const yr = y ? +y : year
+      // TI shortens: "Australian" -> "Australian Grand Prix", "Chinese" -> "Chinese Grand Prix"
       const evts = EVENTS_BY_YEAR[yr] ?? []
-      const full = evts.find(ev => ev.toLowerCase().includes(e.toLowerCase()) || ev.replace(' Grand Prix','').toLowerCase() === e.toLowerCase()) ?? e
+      const eDec = decodeURIComponent(e)
+      const full = evts.find(ev => 
+        ev === eDec ||
+        ev.toLowerCase().includes(eDec.toLowerCase()) ||
+        ev.replace(' Grand Prix','').toLowerCase() === eDec.toLowerCase() ||
+        ev.replace(' Grand Prix','') === eDec
+      ) ?? eDec
       setEvent(full)
     }
+    
     if (s) {
       const sessionCode = SESSION_URL_MAP[s] ?? s
       setSession(sessionCode)
     }
+    
     if (d) setDrivers(d.split(',').filter(Boolean))
     if (m) setMode(m === '2' ? 'expert' : 'essential')
+    
+    // Parse l= param: "2026-Australian-Q-NOR-25,2026-Australian-Q-VER-1"
+    // Format: {year}-{eventShort}-{session}-{driver}-{lap}
+    if (l) {
+      const preselected = l.split(',').filter(Boolean).map(entry => {
+        const parts = entry.split('-')
+        if (parts.length >= 5) {
+          const driver = parts[parts.length - 2]
+          const lap = parseInt(parts[parts.length - 1])
+          return isNaN(lap) ? null : { driver, lap }
+        }
+        return null
+      }).filter((x): x is {driver:string;lap:number} => x !== null)
+      if (preselected.length > 0) {
+        // Store preselected laps to load after drivers are available
+        window.__preselectedLaps = preselected
+      }
+    }
+    
     setUrlDone(true)
   }, [sp, urlDone])
 
@@ -127,6 +158,12 @@ function Dashboard() {
         setAvailable(ds)
         const cur = useStore.getState().drivers
         if (!cur.length) {
+          // If l= param had preselected drivers, use those
+          const preselected = (window as any).__preselectedLaps as {driver:string;lap:number}[] | undefined
+          if (preselected?.length) {
+            const uniqueDrivers = [...new Set(preselected.map(p => p.driver))].filter(d => ds.some(x => x.driver === d))
+            if (uniqueDrivers.length) { setDrivers(uniqueDrivers); return }
+          }
           const favHits = favoriteDrivers.filter(f => ds.some(d => d.driver === f))
           setDrivers(favHits.length ? favHits : ds.slice(0,5).map(d => d.driver))
         }
@@ -166,10 +203,12 @@ function Dashboard() {
   }, [year, event, session])
 
   const share = () => {
-    // Build TracingInsights-style URL
+    // Build TracingInsights-compatible URL with short event name and l= selected laps
     const eShort = event.replace(' Grand Prix','')
     const sUrl = session === 'FP1'?'P1' : session === 'FP2'?'P2' : session === 'FP3'?'P3' : session
-    const p = new URLSearchParams({ y:String(year), e:eShort, s:sUrl, d:drivers.join(','), mode:mode==='expert'?'2':'1' })
+    const laps = selLaps.map(sl => `${year}-${eShort.replace(/\s+/g,'-')}-${sUrl}-${sl.driver}-${sl.lap}`).join(',')
+    const p = new URLSearchParams({ y:String(year), e:eShort, s:sUrl, d:drivers.join(','), mode:mode==='expert'?'2':'1', trackStatus:'true' })
+    if (laps) p.set('l', laps)
     navigator.clipboard.writeText(location.origin+'/?'+p).then(()=>alert('Share link copied!'))
   }
 
@@ -284,7 +323,7 @@ function Dashboard() {
               </div>
             )}
 
-            {error && <div className="alert alert-warning text-xs py-2 mt-2 rounded-lg whitespace-pre-wrap"><span>{error}</span></div>}
+            {/* error shown in noDataMessage below */}
           </div>
 
           {/* Favorites */}
@@ -350,15 +389,37 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Loading */}
-      {loading && <div className="flex justify-center py-20"><span className="loading loading-spinner loading-lg text-primary"/></div>}
+      {/* Loading overlay - matches TI exactly */}
+      {loading && (
+        <div id="loadingOverlay" className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-base-100/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-20 h-20">
+              <svg className="animate-spin -rotate-90" viewBox="0 0 100 100">
+                <circle id="progressPath" cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--p))" strokeWidth="8"
+                  strokeLinecap="round" strokeDasharray="251" strokeDashoffset="50" opacity="0.9"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--p)/0.15)" strokeWidth="8"/>
+              </svg>
+            </div>
+            <div id="loadingMessage" className="text-primary font-semibold text-sm">Loading session data…</div>
+            <div id="loadingContext" className="text-base-content/40 text-xs">{event} · {year} {SESSION_MAP[session]??session}</div>
+          </div>
+        </div>
+      )}
 
-      {/* Empty */}
+      {/* No data message - matches TI exactly */}
       {!activeData.length && !loading && (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-base-content/15 select-none">
-          <div className="text-8xl">🏁</div>
-          <p className="text-xl font-semibold">Select a year, event and session</p>
-          <p className="text-sm opacity-70">Live F1 telemetry from github.com/TracingInsights</p>
+        <div id="noDataMessage" className="flex flex-col items-center justify-center min-h-[60vh] gap-4 select-none">
+          <div className="text-6xl opacity-30">🏁</div>
+          <div className="text-center">
+            <p className="text-lg font-semibold text-base-content/40">Select a year, event and session</p>
+            <p className="text-sm text-base-content/25 mt-1">Live F1 telemetry from <span className="font-mono">github.com/TracingInsights</span></p>
+            <p className="text-xs text-base-content/20 mt-1">Updated ~30 minutes after each session ends</p>
+          </div>
+          {error && (
+            <div className="alert alert-warning max-w-md text-sm py-3 rounded-xl">
+              <span>{error}</span>
+            </div>
+          )}
         </div>
       )}
 

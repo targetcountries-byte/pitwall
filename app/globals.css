@@ -2,24 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TracingInsights exact body gradient - the most distinctive visual */
+/* TracingInsights default: dark blue-to-black gradient */
 body {
-  background: linear-gradient(135deg, rgb(0, 36, 81) 0%, rgb(0, 0, 0) 100%) fixed !important;
+  background-image: linear-gradient(rgb(0, 36, 81), rgb(0, 0, 0));
+  background-attachment: fixed;
   min-height: 100vh;
 }
-
-/* Theme-specific gradients */
-[data-theme="ferrari"] body { background: linear-gradient(135deg, rgb(80, 0, 0) 0%, rgb(0, 0, 0) 100%) fixed !important; }
-[data-theme="mclaren"] body { background: linear-gradient(135deg, rgb(80, 40, 0) 0%, rgb(0, 0, 0) 100%) fixed !important; }
-[data-theme="mercedes"] body { background: linear-gradient(135deg, rgb(0, 40, 36) 0%, rgb(0, 0, 0) 100%) fixed !important; }
-[data-theme="redbull"] body { background: linear-gradient(135deg, rgb(0, 20, 80) 0%, rgb(0, 0, 0) 100%) fixed !important; }
 
 html { scroll-behavior: smooth; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(var(--p)/0.3); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--p)/0.6); }
+::-webkit-scrollbar-thumb { background: hsl(var(--p)/0.35); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--p)/0.65); }
 
 .chart-tooltip {
   position: absolute;
@@ -28,16 +23,19 @@ html { scroll-behavior: smooth; }
   font-size: 11px;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid hsl(var(--b3)/0.5);
-  background: hsl(var(--b2)/0.97);
-  color: hsl(var(--bc));
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15,15,30,0.97);
+  color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
   white-space: nowrap;
-  max-width: 240px;
+  max-width: 260px;
 }
 
 .ti-select {
   @apply select select-bordered text-primary bg-base-200/60 w-full;
   min-height: 42px;
 }
+
+/* Navbar always sits on top of body gradient */
+.navbar { position: sticky; top: 0; z-index: 200; }

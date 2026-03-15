@@ -372,6 +372,12 @@ function Dashboard() {
         <section id="chart-container" className="mx-0.5 sm:mx-1 md:mx-2 lg:mx-4 mb-3">
           <div className="rounded-xl border border-white/[0.06] p-2 sm:p-3 lg:p-5 min-h-[36rem]"
             style={{background:'rgba(255,255,255,0.025)',backdropFilter:'blur(8px)'}}>
+            {/* Chart / Data tabs like TI */}
+            <div className="flex gap-0 mb-3 border-b border-white/[0.06]">
+              <button className="px-4 py-1.5 text-xs font-semibold text-primary border-b-2 border-primary -mb-px">Chart</button>
+              <button className="px-4 py-1.5 text-xs font-semibold text-base-content/40 hover:text-base-content/70 transition-colors">Data</button>
+            </div>
+
             <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
               <div>
                 <h2 className="text-sm sm:text-xl font-bold text-primary">{event} — {year} {SESSION_MAP[session]??session}</h2>
@@ -455,7 +461,7 @@ function Dashboard() {
 
         {/* POSITION CHANGES */}
         <Section id="position-changes-section" title="POSITION CHANGES"
-          desc="Race position per lap. P1 at the top. Only available for Race and Sprint sessions.">
+          desc="Track driver positions lap-by-lap. Lines show how each driver's race position evolved over the session (P1 at top).">
           <PositionChart drivers={activeData}/>
         </Section>
 
@@ -487,6 +493,23 @@ function Dashboard() {
           </Section>
         )}
       </>)}
+
+      {/* Global annotation toolbar — TI shows this when Annotate Charts is active */}
+      {annotateCharts && activeData.length > 0 && (
+        <div id="global-annotation-toolbar"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-1.5 px-3 py-2 rounded-xl shadow-2xl border border-primary/30"
+          style={{background:'rgba(10,15,40,0.95)',backdropFilter:'blur(12px)'}}>
+          <span className="text-[9px] text-primary/60 font-bold uppercase tracking-widest mr-1">Tools:</span>
+          {[['V','Vertical'],['P','Pen'],['T','Text'],['A','Arrow'],['L','Line'],['R','Rectangle'],['O','Circle'],['E','Eraser']].map(([k,label])=>(
+            <button key={k} title={label}
+              className="w-6 h-6 rounded flex items-center justify-center text-[9px] font-bold hover:bg-primary/20 text-primary/70 hover:text-primary transition-all border border-transparent hover:border-primary/30">
+              {k}
+            </button>
+          ))}
+          <div className="w-px h-4 bg-primary/20 mx-0.5"/>
+          <input type="color" defaultValue="#e8f000" className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent" title="Color"/>
+        </div>
+      )}
     </div>
   )
 }

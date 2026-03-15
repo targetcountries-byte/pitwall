@@ -66,10 +66,12 @@ export function SelectedLapCards({
                     {sl.driver[0]}
                   </div>
                   {/* Compound badge overlay */}
-                  <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shadow-lg"
-                    style={{ background: cc, color: isWhite ? '#000' : '#fff', border: '1px solid rgba(0,0,0,0.3)' }}>
-                    {lap?.compound[0] ?? '?'}
-                  </div>
+                  {lap && lap.compound !== 'UNKNOWN' && (
+                    <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shadow-lg"
+                      style={{ background: cc, color: isWhite ? '#000' : '#fff', border: '1px solid rgba(0,0,0,0.5)' }}>
+                      {lap.compound[0]}
+                    </div>
+                  )}
                   {/* Stint number */}
                   {lap && (
                     <div className="absolute top-1 right-1 text-[8px] font-mono text-white/60 bg-black/40 rounded px-1">
@@ -91,7 +93,7 @@ export function SelectedLapCards({
                     {/* Position badge */}
                     <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold shrink-0 ml-1"
                       style={{ borderColor: color, color, background: color + '20' }}>
-                      {lap?.pos || idx + 1}
+                      {(lap?.pos && lap.pos > 0) ? lap.pos : (idx + 1)}
                     </div>
                   </div>
 

@@ -6,7 +6,7 @@ import { fetchDrivers, fetchLaptimes, fetchFastestLapTel, fetchTelemetry, fetchW
 import type { DriverData, LapRow, WeatherData } from '@/lib/api'
 import { AVAILABLE_YEARS, EVENTS_BY_YEAR, SESSION_CODES, SESSION_MAP, SESSION_URL_MAP, COMPOUND_COLORS } from '@/lib/constants'
 import dynamic from 'next/dynamic'
-import { RefreshCw, Share2, Zap, Star, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { RefreshCw, Share2, Zap, Star, X, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
 
 declare global { interface Window { __preselectedLaps?: {driver:string;lap:number}[] } }
 
@@ -329,6 +329,13 @@ function Dashboard() {
             <button onClick={share} className="btn btn-ghost btn-xs gap-1 text-primary ml-auto sm:ml-0">
               <Share2 size={11}/> Share
             </button>
+            <a
+              href={`/analysis/race-pace?y=${year}&e=${encodeURIComponent(event)}&autoload=1`}
+              className="btn btn-primary btn-xs gap-1 font-bold shadow-lg"
+              style={{boxShadow:`0 0 12px ${'hsl(var(--p)/0.35)'}`}}
+            >
+              <TrendingUp size={11}/> Race Pace ▶
+            </a>
           </div>
         </div>
       </section>

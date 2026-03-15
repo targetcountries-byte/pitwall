@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { Suspense, useEffect, useRef, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import * as d3 from 'd3'
 import { CDN_FALLBACKS, AVAILABLE_YEARS, EVENTS_BY_YEAR, TEAM_COLORS } from '@/lib/constants'
 import { RefreshCw, TrendingUp } from 'lucide-react'
@@ -649,12 +650,24 @@ function ConstructorBars({ stats }: { stats: DriverStats[] }) {
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────
-export default function RacePacePage() {
-  const [year,    setYear]    = useState(2026)
-  const [event,   setEvent]   = useState('Chinese Grand Prix')
+function RacePaceInner() {
+  const sp = useSearchParams()
+  
+  // Read URL params — supports ?y=2026&e=Chinese+Grand+Prix&autoload=1
+  const urlYear  = sp.get('y') ? +sp.get('y')! : 2026
+  const urlEvent = sp.get('e') ? decodeURIComponent(sp.get('e')!) : 'Chinese Grand Prix'
+  const autoLoad = sp.get('autoload') === '1'
+
+  const [year,    setYear]    = useState(urlYear)
+  const [event,   setEvent]   = useState(() => {
+    // Match partial event name to full event in our list
+    const evts = EVENTS_BY_YEAR[urlYear] ?? []
+    return evts.find(ev => ev === urlEvent || ev.toLowerCase().includes(urlEvent.toLowerCase()) || ev.replace(' Grand Prix','').toLowerCase() === urlEvent.toLowerCase()) ?? urlEvent
+  })
   const [stats,   setStats]   = useState<DriverStats[]>([])
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
+  const [ran,     setRan]     = useState(false)
 
   const raceEvents = (EVENTS_BY_YEAR[year] ?? []).filter(e => !e.startsWith('Pre-Season'))
 
@@ -665,9 +678,13 @@ export default function RacePacePage() {
     if (e) setError(e)
     else setStats(s)
     setLoading(false)
+    setRan(true)
   }, [year, event])
 
-  useEffect(() => { load() }, [])
+  // Auto-run when ?autoload=1 is in URL (e.g. from main dashboard button)
+  useEffect(() => {
+    if (autoLoad && !ran) { load() }
+  }, [autoLoad, ran])
 
   const fastest = stats[0]
   const slowest = stats[stats.length - 1]
@@ -854,11 +871,32 @@ export default function RacePacePage() {
       </>)}
 
       {!loading && !stats.length && !error && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 text-base-content/20">
-          <TrendingUp size={56} className="opacity-20"/>
-          <p className="text-xl font-black">Select a race event and click Load Race Pace</p>
+        <div className="flex flex-col items-center justify-center py-20 gap-6">
+          <div className="text-6xl opacity-30">🏎️</div>
+          <div className="text-center">
+            <p className="text-xl font-black text-base-content/50">Ready to analyse race pace</p>
+            <p className="text-sm text-base-content/25 mt-1">{year} {event}</p>
+          </div>
+          <button onClick={load}
+            className="btn btn-primary btn-lg gap-3 font-black text-lg shadow-2xl"
+            style={{boxShadow:'0 0 32px hsl(var(--p)/0.4)', minWidth: 240}}>
+            <TrendingUp size={22}/> Run Race Pace ▶
+          </button>
+          <p className="text-xs text-base-content/25">Fetches all {raceEvents.length} driver lap times in parallel</p>
         </div>
       )}
     </div>
+  )
+}
+
+export default function RacePacePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-24">
+        <span className="loading loading-spinner loading-lg text-primary"/>
+      </div>
+    }>
+      <RacePaceInner/>
+    </Suspense>
   )
 }

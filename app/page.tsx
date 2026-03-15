@@ -44,7 +44,7 @@ function Dashboard() {
   const router = useRouter()
   const store = useStore()
   const { year, event, session, drivers, driverData, mode, fuelCorr, hideOutliers,
-          smoothChart, showTrackStatus, autoSelectFastest, favoriteDrivers,
+          smoothChart, showTrackStatus, autoSelectFastest, annotateCharts, favoriteDrivers,
           setYear, setEvent, setSession, setDrivers, setDriverData, toggle, addFavorite, removeFavorite, setMode } = store
 
   const [available, setAvailable]     = useState<{driver:string;team:string;color:string;fn:string;ln:string;url:string}[]>([])
@@ -289,6 +289,7 @@ function Dashboard() {
             {([
               ['autoSelectFastest', autoSelectFastest, 'Auto select fastest lap', <Zap key="z" size={12} className="text-warning"/>],
               ['fuelCorr',          fuelCorr,          'Fuel Correction',         null],
+              ['annotateCharts',    annotateCharts,    'Annotate Charts',          null],
               ['hideOutliers',      hideOutliers,      'Hide Outliers(107%)',      null],
               ['smoothChart',       smoothChart,       'Smooth lap chart',         null],
               ['showTrackStatus',   showTrackStatus,   'Show Track Status',        null],
@@ -298,9 +299,19 @@ function Dashboard() {
                 {icon}<span className="text-xs sm:text-sm text-primary">{label}</span>
               </label>
             ))}
+            <label className="flex items-center gap-1 sm:gap-1.5 px-1 py-1 cursor-pointer select-none hover:scale-105 transition-transform">
+              <input type="checkbox" className="checkbox checkbox-primary checkbox-xs sm:checkbox-sm"/>
+              <span className="text-xs sm:text-sm text-primary">Use Time X Axis</span>
+              <span className="badge badge-primary badge-xs ml-0.5">NEW</span>
+            </label>
             <button onClick={share} className="btn btn-ghost btn-xs gap-1 text-primary ml-auto">
               <Share2 size={11}/> Share
             </button>
+            <label className="flex items-center gap-1 sm:gap-1.5 px-1 py-1 cursor-pointer select-none hover:scale-105 transition-transform">
+              <input type="checkbox" className="checkbox checkbox-primary checkbox-xs sm:checkbox-sm"/>
+              <span className="text-xs sm:text-sm text-primary">Add Marker</span>
+              <span className="badge badge-primary badge-xs ml-0.5">NEW</span>
+            </label>
           </div>
         </div>
       </section>
@@ -391,38 +402,38 @@ function Dashboard() {
         </section>
 
         {/* TELEMETRY */}
-        <Section id="tel-chart-container" title="Speed Trace & Telemetry"
+        <Section id="tel-chart-container" title="SPEED TRACE & TELEMETRY"
           desc={activeData.some(d=>d.tel.length>0) ? 'Fastest lap telemetry. Click any lap dot above to compare specific laps.' : 'Click any lap dot above to load telemetry comparison.'}>
           <TelemetryChart drivers={activeData}/>
         </Section>
 
         {/* STINT ANALYSIS */}
-        <Section id="stint-analysis-section" title="Stint Analysis"
+        <Section id="stint-analysis-section" title="STINT ANALYSIS"
           desc="Explore lap times within each stint. Stint numbers reset to 1 after every pit stop, with tyre compound colors highlighting performance changes.">
           <StintChart drivers={activeData}/>
         </Section>
 
         {/* TYRE STRATEGY */}
-        <Section id="tyre-strategy-chart" title="Tyre Strategy"
+        <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
           desc="Overview of tyre strategy per driver — compounds used, stint length, and pit stop timing.">
           <TyreStrategyChart drivers={activeData}/>
         </Section>
 
         {/* SECTOR ANALYSIS */}
-        <Section id="sector-chart-section" title="Sector Analysis"
+        <Section id="sector-chart-section" title="SECTOR ANALYSIS"
           desc="Analyze sector times (S1, S2, S3) across laps. Toggle sectors to compare specific performance areas.">
           <SectorChart drivers={activeData}/>
         </Section>
 
         {/* POSITION CHANGES */}
-        <Section id="position-changes-section" title="Position Changes"
+        <Section id="position-changes-section" title="POSITION CHANGES"
           desc="Track driver positions lap-by-lap. Lines show how each driver's race position evolved. P1 at the top.">
           <PositionChart drivers={activeData}/>
         </Section>
 
         {/* GG PLOT — Expert only */}
         {mode === 'expert' && (
-          <Section id="gg-plot" title="GG Plot" desc="Lateral vs longitudinal G-forces. Reveals the car performance envelope. Load telemetry above first.">
+          <Section id="gg-plot" title="GG PLOT" desc="Lateral vs longitudinal G-forces. Reveals the car performance envelope. Load telemetry above first.">
             <GGChart drivers={activeData}/>
           </Section>
         )}

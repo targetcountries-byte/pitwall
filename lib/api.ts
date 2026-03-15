@@ -146,8 +146,10 @@ export async function fetchFastestLapTel(year: number, event: string, session: s
 export async function fetchCorners(year: number, event: string, session: string): Promise<Corner[] | null> {
   try {
     const r = await fetchWithFallback(`${sessionPath(year, event, session)}/corners.json`)
+    if (!r.ok) return null
     const d = await r.json()
-    return (d.CornerNumber as number[]).map((_, i) => ({
+    if (!d?.CornerNumber?.length) return null
+    return (d.CornerNumber as number[]).map((_: number, i: number) => ({
       CornerNumber: d.CornerNumber[i], X: d.X[i], Y: d.Y[i],
       Angle: d.Angle[i], Distance: d.Distance[i],
     }))
@@ -155,10 +157,27 @@ export async function fetchCorners(year: number, event: string, session: string)
 }
 
 // ── Weather ────────────────────────────────────────────────────────────────────
-export async function fetchWeather(year: number, event: string, session: string) {
+export interface WeatherData {
+  wT: number[]; wAT: number[]; wH: number[]; wP: number[]
+  wR: boolean[]; wTT: number[]; wWD: number[]; wWS: number[]
+}
+
+export async function fetchWeather(year: number, event: string, session: string): Promise<WeatherData | null> {
   try {
     const r = await fetchWithFallback(`${sessionPath(year, event, session)}/weather.json`)
-    return await r.json()
+    if (!r.ok) return null
+    const d = await r.json()
+    // Normalize: wT is session time in seconds, other fields are measurements
+    return {
+      wT:  d.wT  ?? [],
+      wAT: d.wAT ?? [],
+      wH:  d.wH  ?? [],
+      wP:  d.wP  ?? [],
+      wR:  (d.wR  ?? []).map((v: any) => v === true || v === 'True' || v === 1),
+      wTT: d.wTT ?? [],
+      wWD: d.wWD ?? [],
+      wWS: d.wWS ?? [],
+    }
   } catch { return null }
 }
 

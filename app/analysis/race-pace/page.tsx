@@ -151,11 +151,15 @@ function BoxPlotChart({ stats, year, event }: { stats: DriverStats[]; year: numb
     const g = svg.append('g').attr('transform', `translate(${mL},${mT})`)
     g.append('rect').attr('width', iW).attr('height', iH).attr('fill', 'url(#chartBg)').attr('rx', 6)
 
-    // Y domain — all times in seconds
+    // Y domain — fixed 95s to 102s for consistent comparison across races
+    // User can see the full field spread without auto-scaling distortion
     const allVals = stats.flatMap(s => [s.min, s.q1, s.median, s.q3, s.max, ...s.laps.map(l => l.time)])
-    const [yMin, yMax] = d3.extent(allVals) as [number, number]
-    const yPad = (yMax - yMin) * 0.14
-    const yS = d3.scaleLinear().domain([yMax + yPad, yMin - yPad]).range([iH, 0])
+    const dataMin = d3.min(allVals) ?? 95
+    const dataMax = d3.max(allVals) ?? 102
+    // Clamp to 95–102 but expand if data goes outside
+    const yDomainMin = Math.min(95, dataMin - 0.5)
+    const yDomainMax = Math.max(102, dataMax + 0.5)
+    const yS = d3.scaleLinear().domain([yDomainMax, yDomainMin]).range([iH, 0])
 
     // X: band scale
     const xS = d3.scaleBand()
@@ -345,11 +349,14 @@ function RaceTraceChart({ stats }: { stats: DriverStats[] }) {
     if (!allPts.length) return
     const maxLap = d3.max(allPts, p => p.lap)!
     const minLap = d3.min(allPts, p => p.lap)!
-    const [yMin, yMax] = d3.extent(allPts, p => p.t) as [number, number]
-    const yPad = (yMax - yMin) * 0.12
+    const dataMinT = d3.min(allPts, p => p.t) ?? 95
+    const dataMaxT = d3.max(allPts, p => p.t) ?? 102
+    // Fixed Y axis: 95s bottom → 102s top (expand if data goes outside)
+    const yDomMin = Math.min(95, dataMinT - 0.5)
+    const yDomMax = Math.max(102, dataMaxT + 0.5)
 
     const xS = d3.scaleLinear().domain([minLap, maxLap]).range([0, iW])
-    const yS = d3.scaleLinear().domain([yMax + yPad, yMin - yPad]).range([iH, 0])
+    const yS = d3.scaleLinear().domain([yDomMax, yDomMin]).range([iH, 0])
 
     // Grid
     yS.ticks(6).forEach(v => {
@@ -426,8 +433,11 @@ function DistributionChart({ stats }: { stats: DriverStats[] }) {
     const g = svg.append('g').attr('transform', `translate(${m.l},${m.t})`)
 
     const allTimes = stats.flatMap(s => s.laps.map(l => l.time))
-    const [yMin, yMax] = d3.extent(allTimes) as [number, number]
-    const yS = d3.scaleLinear().domain([yMax + 1, yMin - 1]).range([iH, 0])
+    const dataMin2 = d3.min(allTimes) ?? 95
+    const dataMax2 = d3.max(allTimes) ?? 102
+    const yS = d3.scaleLinear()
+      .domain([Math.max(102, dataMax2 + 0.5), Math.min(95, dataMin2 - 0.5)])
+      .range([iH, 0])
 
     g.append('g').call(d3.axisLeft(yS).ticks(4).tickFormat(d => `${(+d).toFixed(1)}s`))
       .call(s => { s.selectAll('text').attr('fill', 'rgba(255,255,255,0.35)').attr('font-size', 8).attr('font-family', 'monospace'); s.selectAll('line,path').attr('stroke', 'rgba(255,255,255,0.08)') })

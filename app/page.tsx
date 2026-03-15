@@ -16,6 +16,40 @@ const SectorChart      = dynamic(()=>import('@/components/charts/SectorChart').t
 const PositionChart    = dynamic(()=>import('@/components/charts/PositionChart').then(m=>({default:m.PositionChart})),   {ssr:false,loading:()=><Sk h={260}/>})
 const GGChart          = dynamic(()=>import('@/components/charts/GGChart').then(m=>({default:m.GGChart})),               {ssr:false,loading:()=><Sk h={300}/>})
 
+// Inline data table component - no separate file needed
+function LapDataTable({ drivers }: { drivers: DriverData[] }) {
+  const allLaps = drivers.flatMap(d => d.laps.filter(l => l.time !== null).map(l => ({...l, code: d.code, color: d.color}))).sort((a,b) => (a.time??0)-(b.time??0))
+  const fmtT = (t: number|null) => t == null ? '-' : (Math.floor(t/60)>0 ? `${Math.floor(t/60)}:${(t%60).toFixed(3).padStart(6,'0')}` : (t%60).toFixed(3))
+  const CCOL: Record<string,string> = {SOFT:'#e8002d',MEDIUM:'#ffd600',HARD:'#f0f0ec',INTER:'#39b54a',WET:'#0067ff',UNKNOWN:'#888'}
+  if (!allLaps.length) return <div className="text-center py-8 text-base-content/25 text-sm">No lap data loaded</div>
+  return (
+    <div className="overflow-x-auto max-h-80 overflow-y-auto">
+      <table className="table table-xs w-full font-mono">
+        <thead className="sticky top-0 bg-base-300/90 backdrop-blur">
+          <tr className="text-primary/60 text-[10px]">
+            <th>Driver</th><th>Lap</th><th>Time</th><th>Tyre</th><th>Life</th><th>S1</th><th>S2</th><th>S3</th><th>Pos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allLaps.slice(0,200).map((l,i) => (
+            <tr key={i} className={`border-base-300/10 ${l.del?'opacity-30':''} ${l.pb?'bg-primary/5':''}`}>
+              <td style={{color:(l as any).color}} className="font-bold">{(l as any).code}</td>
+              <td className="opacity-60">{l.lap}</td>
+              <td className={`font-bold ${l.pb?'text-primary':''}`}>{fmtT(l.time)}</td>
+              <td><span className="px-1 rounded text-[9px] font-bold" style={{background:CCOL[l.compound]+'33',color:CCOL[l.compound]}}>{l.compound[0]}</span></td>
+              <td className="opacity-50">{l.life}</td>
+              <td className="opacity-60">{l.s1?.toFixed(3)??'-'}</td>
+              <td className="opacity-60">{l.s2?.toFixed(3)??'-'}</td>
+              <td className="opacity-60">{l.s3?.toFixed(3)??'-'}</td>
+              <td className="opacity-40">{l.pos||'-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function Sk({h}:{h:number}){ return <div className="w-full animate-pulse bg-base-300/30 rounded-xl" style={{height:h}}/> }
 function fmt(t:number){ const m=Math.floor(t/60),s=(t%60).toFixed(3).padStart(6,'0'); return m>0?`${m}:${s}`:(t%60).toFixed(3) }
 
@@ -401,22 +435,10 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* TELEMETRY */}
-        <Section id="tel-chart-container" title="SPEED TRACE & TELEMETRY"
-          desc={activeData.some(d=>d.tel.length>0) ? 'Fastest lap telemetry. Click any lap dot above to compare specific laps.' : 'Click any lap dot above to load telemetry comparison.'}>
-          <TelemetryChart drivers={activeData}/>
-        </Section>
-
-        {/* STINT ANALYSIS */}
+        {/* STINT ANALYSIS — TI order: after lap chart */}
         <Section id="stint-analysis-section" title="STINT ANALYSIS"
           desc="Explore lap times within each stint. Stint numbers reset to 1 after every pit stop, with tyre compound colors highlighting performance changes.">
           <StintChart drivers={activeData}/>
-        </Section>
-
-        {/* TYRE STRATEGY */}
-        <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
-          desc="Overview of tyre strategy per driver — compounds used, stint length, and pit stop timing.">
-          <TyreStrategyChart drivers={activeData}/>
         </Section>
 
         {/* SECTOR ANALYSIS */}
@@ -425,10 +447,28 @@ function Dashboard() {
           <SectorChart drivers={activeData}/>
         </Section>
 
+        {/* TYRE STRATEGY */}
+        <Section id="tyre-strategy-chart" title="TYRE STRATEGY"
+          desc="Overview of tyre strategy per driver — compounds used, stint length, and pit stop timing.">
+          <TyreStrategyChart drivers={activeData}/>
+        </Section>
+
         {/* POSITION CHANGES */}
         <Section id="position-changes-section" title="POSITION CHANGES"
           desc="Track driver positions lap-by-lap. Lines show how each driver's race position evolved. P1 at the top.">
           <PositionChart drivers={activeData}/>
+        </Section>
+
+        {/* DATA TABLE — TI has a tabular lap times view */}
+        <Section id="data-table-container" title="LAP TIMES DATA TABLE"
+          desc="Tabular view of lap times, sector splits, tyre compounds and speed trap data." defaultOpen={false}>
+          <LapDataTable drivers={activeData}/>
+        </Section>
+
+        {/* TELEMETRY — TI puts this near bottom, after data table */}
+        <Section id="tel-chart-container" title="SPEED TRACE & TELEMETRY"
+          desc={activeData.some(d=>d.tel.length>0) ? 'Fastest lap telemetry loaded. Click any lap dot above to compare specific laps.' : 'Click any lap dot on the chart above to load telemetry.'}>
+          <TelemetryChart drivers={activeData}/>
         </Section>
 
         {/* GG PLOT — Expert only */}

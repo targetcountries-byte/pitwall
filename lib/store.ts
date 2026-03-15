@@ -21,7 +21,7 @@ interface Store {
 
 export const useStore = create<Store>()(persist(
   (set) => ({
-    year: 2026, event: 'Australian Grand Prix', session: 'Q',
+    year: 2026, event: 'Chinese Grand Prix', session: 'Q',
     drivers: [], driverData: {},
     theme: 'tracinginsights', mode: 'essential', lang: 'EN',
     fuelCorr: false, hideOutliers: true, smoothChart: true,
